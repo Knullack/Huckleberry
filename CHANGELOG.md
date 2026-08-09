@@ -4,6 +4,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.5] - 2026-08-09
+### Added
+- Native dashboard form entities (datetime, number, select, switch, text)
+	for bottle, diaper, activity, and sleep logging.
+- Native one-tap write controls for form submission without external
+	input helpers or scripts.
+- Native delete and correction controls for latest sleep, bottle, and diaper
+	events.
+- Native restore control for the latest retained deleted interval.
+
+### Changed
+- CI and local configuration updated for Python 3.14 compatibility.
+
 ## [0.1.0] - 2026-08-08
 ### Added
 - Initial repository scaffold.
