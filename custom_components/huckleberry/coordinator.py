@@ -860,6 +860,9 @@ def _required_service_datetime(value: Any, field_name: str) -> datetime:
 
 
 def _required_positive_float(value: Any, field_name: str) -> float:
+    if value is None or value == "":
+        raise HomeAssistantError(f"{field_name} is required")
+
     try:
         number = float(value)
     except (TypeError, ValueError) as exc:
@@ -867,6 +870,7 @@ def _required_positive_float(value: Any, field_name: str) -> float:
 
     if number <= 0:
         raise HomeAssistantError(f"{field_name} must be greater than 0")
+
     return number
 
 
