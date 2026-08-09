@@ -112,6 +112,90 @@ log_sleep:
       selector:
         text:
 
+delete_sleep:
+  name: Delete sleep
+  description: Delete a sleep interval by interval ID.
+  fields:
+    child_uid:
+      name: Child UID
+      description: Optional when one child is configured; required for multi-child setups.
+      required: false
+      selector:
+        text:
+    child_name:
+      name: Child Name
+      description: Optional configured child name; use this instead of child_uid.
+      required: false
+      selector:
+        text:
+    interval_id:
+      name: Interval ID
+      description: Firestore interval document ID to delete.
+      required: true
+      selector:
+        text:
+
+list_deleted_intervals:
+  name: List deleted intervals
+  description: List retained delete-log entries (kept for 30 days).
+  fields:
+    child_uid:
+      name: Child UID
+      description: Optional when one child is configured; required for multi-child setups.
+      required: false
+      selector:
+        text:
+    child_name:
+      name: Child Name
+      description: Optional configured child name; use this instead of child_uid.
+      required: false
+      selector:
+        text:
+    collection:
+      name: Collection
+      description: Optional filter by event type.
+      required: false
+      selector:
+        select:
+          options:
+            - bottle
+            - feed
+            - diaper
+            - sleep
+    limit:
+      name: Limit
+      description: Maximum number of log entries to return.
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 500
+          step: 1
+          mode: box
+
+restore_deleted_interval:
+  name: Restore deleted interval
+  description: Restore one previously deleted interval using its log_id.
+  fields:
+    child_uid:
+      name: Child UID
+      description: Optional when one child is configured; required for multi-child setups.
+      required: false
+      selector:
+        text:
+    child_name:
+      name: Child Name
+      description: Optional configured child name; use this instead of child_uid.
+      required: false
+      selector:
+        text:
+    log_id:
+      name: Log ID
+      description: Delete log entry ID returned by list_deleted_intervals.
+      required: true
+      selector:
+        text:
+
 start_nursing:
   name: Start nursing
   description: Start a nursing timer for a child.
@@ -343,6 +427,29 @@ log_bottle:
       selector:
         text:
 
+delete_bottle:
+  name: Delete bottle
+  description: Delete a bottle interval by interval ID.
+  fields:
+    child_uid:
+      name: Child UID
+      description: Optional when one child is configured; required for multi-child setups.
+      required: false
+      selector:
+        text:
+    child_name:
+      name: Child Name
+      description: Optional configured child name; use this instead of child_uid.
+      required: false
+      selector:
+        text:
+    interval_id:
+      name: Interval ID
+      description: Firestore interval document ID to delete.
+      required: true
+      selector:
+        text:
+
 log_diaper:
   name: Log diaper
   description: Log a diaper event.
@@ -433,6 +540,29 @@ log_diaper:
       name: Start Time
       description: Optional event timestamp (ISO-8601). Defaults to now.
       required: false
+      selector:
+        text:
+
+delete_diaper:
+  name: Delete diaper
+  description: Delete a diaper interval by interval ID.
+  fields:
+    child_uid:
+      name: Child UID
+      description: Optional when one child is configured; required for multi-child setups.
+      required: false
+      selector:
+        text:
+    child_name:
+      name: Child Name
+      description: Optional configured child name; use this instead of child_uid.
+      required: false
+      selector:
+        text:
+    interval_id:
+      name: Interval ID
+      description: Firestore interval document ID to delete.
+      required: true
       selector:
         text:
 

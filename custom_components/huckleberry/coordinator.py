@@ -38,6 +38,7 @@ from .api import (
 from .const import (
     ATTR_AMOUNT,
     ATTR_BOTTLE_TYPE,
+    ATTR_COLLECTION,
     ATTR_COLOR,
     ATTR_CONSISTENCY,
     ATTR_DIAPER_RASH,
@@ -51,8 +52,11 @@ from .const import (
     ATTR_HOW_IT_HAPPENED,
     ATTR_IMAGE,
     ATTR_INCLUDE_ARCHIVED,
+    ATTR_INTERVAL_ID,
     ATTR_LEFT_AMOUNT,
     ATTR_LEFT_DURATION_SECONDS,
+    ATTR_LIMIT,
+    ATTR_LOG_ID,
     ATTR_MODE,
     ATTR_NOTES,
     ATTR_PEE_AMOUNT,
@@ -85,6 +89,10 @@ from .const import (
     SERVICE_COMPLETE_NURSING,
     SERVICE_COMPLETE_SLEEP,
     SERVICE_CREATE_SOLIDS_CUSTOM_FOOD,
+    SERVICE_DELETE_BOTTLE,
+    SERVICE_DELETE_DIAPER,
+    SERVICE_DELETE_SLEEP,
+    SERVICE_LIST_DELETED_INTERVALS,
     SERVICE_LIST_SOLIDS_CURATED_FOODS,
     SERVICE_LIST_SOLIDS_CUSTOM_FOODS,
     SERVICE_LOG_ACTIVITY,
@@ -98,6 +106,7 @@ from .const import (
     SERVICE_LOG_SOLIDS,
     SERVICE_PAUSE_NURSING,
     SERVICE_PAUSE_SLEEP,
+    SERVICE_RESTORE_DELETED_INTERVAL,
     SERVICE_RESUME_NURSING,
     SERVICE_RESUME_SLEEP,
     SERVICE_START_NURSING,
@@ -473,6 +482,39 @@ class HuckleberryDataUpdateCoordinator(DataUpdateCoordinator[dict[str, ChildSnap
                 start_time=start_time,
                 end_time=end_time,
             )
+        elif service_name == SERVICE_DELETE_SLEEP:
+            interval_id = _required_string(
+                payload.get(ATTR_INTERVAL_ID),
+                ATTR_INTERVAL_ID,
+            )
+            await self.client.delete_sleep(child_uid, interval_id=interval_id)
+        elif service_name == SERVICE_LIST_DELETED_INTERVALS:
+            mutates_state = False
+            collection_name = _optional_collection_name(
+                payload.get(ATTR_COLLECTION),
+                ATTR_COLLECTION,
+            )
+            limit = _optional_positive_int(
+                payload.get(ATTR_LIMIT),
+                ATTR_LIMIT,
+                default=100,
+            )
+            entries = await self.client.list_deleted_intervals(
+                child_uid,
+                collection_name=collection_name,
+                limit=limit,
+            )
+            response = {
+                "child_uid": child_uid,
+                "count": len(entries),
+                "entries": entries,
+            }
+        elif service_name == SERVICE_RESTORE_DELETED_INTERVAL:
+            log_id = _required_string(payload.get(ATTR_LOG_ID), ATTR_LOG_ID)
+            response = await self.client.restore_deleted_interval(
+                child_uid,
+                log_id=log_id,
+            )
         elif service_name == SERVICE_START_NURSING:
             side = _validated_choice(
                 payload.get(ATTR_SIDE, "left"),
@@ -565,6 +607,12 @@ class HuckleberryDataUpdateCoordinator(DataUpdateCoordinator[dict[str, ChildSnap
                 bottle_type=bottle_type,
                 units=units,
             )
+        elif service_name == SERVICE_DELETE_BOTTLE:
+            interval_id = _required_string(
+                payload.get(ATTR_INTERVAL_ID),
+                ATTR_INTERVAL_ID,
+            )
+            await self.client.delete_bottle(child_uid, interval_id=interval_id)
         elif service_name == SERVICE_LOG_DIAPER:
             start_time = _service_datetime(payload.get(ATTR_START_TIME), dt_util.now())
             mode = _validated_choice(
@@ -607,6 +655,12 @@ class HuckleberryDataUpdateCoordinator(DataUpdateCoordinator[dict[str, ChildSnap
                 ),
                 notes=notes,
             )
+        elif service_name == SERVICE_DELETE_DIAPER:
+            interval_id = _required_string(
+                payload.get(ATTR_INTERVAL_ID),
+                ATTR_INTERVAL_ID,
+            )
+            await self.client.delete_diaper(child_uid, interval_id=interval_id)
         elif service_name == SERVICE_LOG_POTTY:
             start_time = _service_datetime(payload.get(ATTR_START_TIME), dt_util.now())
             mode = _validated_choice(
@@ -931,6 +985,37 @@ def _optional_string(value: Any, field_name: str) -> str | None:
         raise HomeAssistantError(f"{field_name} must be a string")
     cleaned = value.strip()
     return cleaned or None
+
+
+def _optional_positive_int(value: Any, field_name: str, default: int) -> int:
+    if value is None:
+        return default
+    try:
+        number = int(value)
+    except (TypeError, ValueError) as exc:
+        raise HomeAssistantError(f"{field_name} must be an integer") from exc
+    if number <= 0:
+        raise HomeAssistantError(f"{field_name} must be greater than 0")
+    return min(500, number)
+
+
+def _optional_collection_name(value: Any, field_name: str) -> str | None:
+    cleaned = _optional_string(value, field_name)
+    if cleaned is None:
+        return None
+
+    normalized = cleaned.casefold()
+    collection_map = {
+        "bottle": "feed",
+        "feed": "feed",
+        "diaper": "diaper",
+        "sleep": "sleep",
+    }
+    resolved = collection_map.get(normalized)
+    if resolved is None:
+        choices = ", ".join(sorted(collection_map))
+        raise HomeAssistantError(f"{field_name} must be one of: {choices}")
+    return resolved
 
 
 def _required_string(value: Any, field_name: str) -> str:

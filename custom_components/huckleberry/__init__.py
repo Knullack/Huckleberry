@@ -33,9 +33,11 @@ from .const import (
     DOMAIN,
     PLATFORMS,
     SERVICE_CREATE_SOLIDS_CUSTOM_FOOD,
+    SERVICE_LIST_DELETED_INTERVALS,
     SERVICE_LIST_SOLIDS_CURATED_FOODS,
     SERVICE_LIST_SOLIDS_CUSTOM_FOODS,
     SERVICE_NAMES,
+    SERVICE_RESTORE_DELETED_INTERVAL,
     SERVICE_START_SLEEP,
 )
 from .coordinator import HuckleberryDataUpdateCoordinator
@@ -46,8 +48,10 @@ SERVICES_WITH_OPTIONAL_CHILD_TARGET = {
 
 SERVICES_WITH_RESPONSE_PAYLOAD = {
     SERVICE_CREATE_SOLIDS_CUSTOM_FOOD,
+    SERVICE_LIST_DELETED_INTERVALS,
     SERVICE_LIST_SOLIDS_CURATED_FOODS,
     SERVICE_LIST_SOLIDS_CUSTOM_FOODS,
+    SERVICE_RESTORE_DELETED_INTERVAL,
 }
 
 
@@ -65,6 +69,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         email=entry.data[CONF_EMAIL],
         password=entry.data[CONF_PASSWORD],
         timezone=entry.data[CONF_TIMEZONE],
+        entry_id=entry.entry_id,
     )
 
     try:

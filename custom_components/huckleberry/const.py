@@ -39,6 +39,9 @@ SERVICE_CANCEL_SLEEP = "cancel_sleep"
 SERVICE_PAUSE_SLEEP = "pause_sleep"
 SERVICE_RESUME_SLEEP = "resume_sleep"
 SERVICE_LOG_SLEEP = "log_sleep"
+SERVICE_DELETE_SLEEP = "delete_sleep"
+SERVICE_LIST_DELETED_INTERVALS = "list_deleted_intervals"
+SERVICE_RESTORE_DELETED_INTERVAL = "restore_deleted_interval"
 SERVICE_START_NURSING = "start_nursing"
 SERVICE_PAUSE_NURSING = "pause_nursing"
 SERVICE_RESUME_NURSING = "resume_nursing"
@@ -47,7 +50,9 @@ SERVICE_COMPLETE_NURSING = "complete_nursing"
 SERVICE_CANCEL_NURSING = "cancel_nursing"
 SERVICE_LOG_NURSING = "log_nursing"
 SERVICE_LOG_BOTTLE = "log_bottle"
+SERVICE_DELETE_BOTTLE = "delete_bottle"
 SERVICE_LOG_DIAPER = "log_diaper"
+SERVICE_DELETE_DIAPER = "delete_diaper"
 SERVICE_LOG_POTTY = "log_potty"
 SERVICE_LOG_GROWTH = "log_growth"
 SERVICE_LOG_PUMP = "log_pump"
@@ -64,6 +69,9 @@ SERVICE_NAMES: tuple[str, ...] = (
     SERVICE_PAUSE_SLEEP,
     SERVICE_RESUME_SLEEP,
     SERVICE_LOG_SLEEP,
+    SERVICE_DELETE_SLEEP,
+    SERVICE_LIST_DELETED_INTERVALS,
+    SERVICE_RESTORE_DELETED_INTERVAL,
     SERVICE_START_NURSING,
     SERVICE_PAUSE_NURSING,
     SERVICE_RESUME_NURSING,
@@ -72,7 +80,9 @@ SERVICE_NAMES: tuple[str, ...] = (
     SERVICE_CANCEL_NURSING,
     SERVICE_LOG_NURSING,
     SERVICE_LOG_BOTTLE,
+    SERVICE_DELETE_BOTTLE,
     SERVICE_LOG_DIAPER,
+    SERVICE_DELETE_DIAPER,
     SERVICE_LOG_POTTY,
     SERVICE_LOG_GROWTH,
     SERVICE_LOG_PUMP,
@@ -85,6 +95,10 @@ SERVICE_NAMES: tuple[str, ...] = (
 
 ATTR_CHILD_UID = "child_uid"
 ATTR_CHILD_NAME = "child_name"
+ATTR_INTERVAL_ID = "interval_id"
+ATTR_LOG_ID = "log_id"
+ATTR_COLLECTION = "collection"
+ATTR_LIMIT = "limit"
 ATTR_START_TIME = "start_time"
 ATTR_END_TIME = "end_time"
 ATTR_AMOUNT = "amount"

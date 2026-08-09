@@ -7,6 +7,7 @@ from collections.abc import Iterable, Mapping
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from typing import Any
+from uuid import uuid4
 from zoneinfo import ZoneInfo
 
 from .models import (
@@ -19,6 +20,7 @@ from .models import (
     SleepEvent,
     SleepTimer,
 )
+from .storage import HuckleberryDeleteLogStorage
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,13 +46,16 @@ class HuckleberryClient:
         email: str,
         password: str,
         timezone: str,
+        entry_id: str | None = None,
     ) -> None:
         self._hass = hass
         self._email = email
         self._password = password
         self._timezone = timezone
+        self._entry_id = entry_id or "default"
         self._tz = ZoneInfo(timezone)
         self._api: Any | None = None
+        self._delete_log_storage: HuckleberryDeleteLogStorage | None = None
 
     @property
     def timezone(self) -> str:
@@ -559,6 +564,93 @@ class HuckleberryClient:
             end_time=end_time,
         )
 
+    async def delete_sleep(self, child_uid: str, *, interval_id: str) -> None:
+        await self._delete_interval_document(
+            action_name="delete_sleep",
+            collection_name="sleep",
+            child_uid=child_uid,
+            interval_id=interval_id,
+        )
+
+    async def list_deleted_intervals(
+        self,
+        child_uid: str,
+        *,
+        collection_name: str | None = None,
+        limit: int = 100,
+    ) -> list[dict[str, Any]]:
+        store = self._require_delete_log_storage()
+        return await store.async_list_entries(
+            child_uid=child_uid,
+            collection_name=collection_name,
+            limit=limit,
+        )
+
+    async def restore_deleted_interval(
+        self,
+        child_uid: str,
+        *,
+        log_id: str,
+    ) -> dict[str, Any]:
+        if self._api is None:
+            raise HuckleberryClientError("authenticate must be called before actions")
+
+        cleaned_log_id = log_id.strip()
+        if not cleaned_log_id:
+            raise HuckleberryClientError("log_id is required")
+
+        store = self._require_delete_log_storage()
+        entry = await store.async_get_entry(cleaned_log_id)
+        if entry is None:
+            raise HuckleberryClientError(
+                f"Delete log entry {cleaned_log_id} was not found"
+            )
+
+        stored_child_uid = str(entry.get("child_uid", "")).strip()
+        if stored_child_uid != child_uid:
+            raise HuckleberryClientError("log_id does not match the selected child")
+
+        collection_name = str(entry.get("collection", "")).strip()
+        if collection_name not in {"feed", "diaper", "sleep"}:
+            raise HuckleberryClientError(
+                f"Delete log entry {cleaned_log_id} has unsupported collection"
+            )
+
+        payload = entry.get("payload")
+        if not isinstance(payload, Mapping):
+            raise HuckleberryClientError(
+                f"Delete log entry {cleaned_log_id} is missing payload data"
+            )
+
+        firestore_getter = getattr(self._api, "_get_firestore_client", None)
+        if not callable(firestore_getter):
+            raise HuckleberryClientError(
+                "restore_deleted_interval is unavailable: "
+                "no Firestore access in upstream API"
+            )
+
+        try:
+            firestore_client = await self._maybe_await(firestore_getter())
+            timestamp_ms = int(datetime.now(tz=UTC).timestamp() * 1000)
+            new_interval_id = f"{timestamp_ms}-{uuid4().hex[:20]}"
+            interval_ref = (
+                firestore_client.collection(collection_name)
+                .document(child_uid)
+                .collection("intervals")
+                .document(new_interval_id)
+            )
+            await self._maybe_await(interval_ref.set(dict(payload)))
+            return {
+                "log_id": cleaned_log_id,
+                "child_uid": child_uid,
+                "collection": collection_name,
+                "new_interval_id": new_interval_id,
+                "restored_from_interval_id": entry.get("interval_id"),
+                "deleted_at": entry.get("deleted_at"),
+            }
+        except Exception as exc:  # pylint: disable=broad-except
+            raise HuckleberryTransportError(str(exc)) from exc
+
     async def start_nursing(self, child_uid: str, side: str = "left") -> None:
         await self._call_action("start_nursing", child_uid, side=side)
 
@@ -619,6 +711,14 @@ class HuckleberryClient:
             units=units,
         )
 
+    async def delete_bottle(self, child_uid: str, *, interval_id: str) -> None:
+        await self._delete_interval_document(
+            action_name="delete_bottle",
+            collection_name="feed",
+            child_uid=child_uid,
+            interval_id=interval_id,
+        )
+
     async def log_diaper(
         self,
         child_uid: str,
@@ -643,6 +743,14 @@ class HuckleberryClient:
             consistency=consistency,
             diaper_rash=diaper_rash,
             notes=notes,
+        )
+
+    async def delete_diaper(self, child_uid: str, *, interval_id: str) -> None:
+        await self._delete_interval_document(
+            action_name="delete_diaper",
+            collection_name="diaper",
+            child_uid=child_uid,
+            interval_id=interval_id,
         )
 
     async def log_potty(
@@ -843,6 +951,99 @@ class HuckleberryClient:
             return await method(**kwargs)
         except Exception as exc:  # pylint: disable=broad-except
             raise HuckleberryTransportError(str(exc)) from exc
+
+    async def _delete_interval_document(
+        self,
+        *,
+        action_name: str,
+        collection_name: str,
+        child_uid: str,
+        interval_id: str,
+    ) -> None:
+        if self._api is None:
+            raise HuckleberryClientError("authenticate must be called before actions")
+
+        cleaned_interval_id = interval_id.strip()
+        if not cleaned_interval_id:
+            raise HuckleberryClientError("interval_id is required")
+
+        firestore_getter = getattr(self._api, "_get_firestore_client", None)
+        if not callable(firestore_getter):
+            raise HuckleberryClientError(
+                f"{action_name} is unavailable: no Firestore access in upstream API"
+            )
+
+        action = getattr(self._api, action_name, None)
+
+        try:
+            firestore_client = await self._maybe_await(firestore_getter())
+            interval_ref = (
+                firestore_client.collection(collection_name)
+                .document(child_uid)
+                .collection("intervals")
+                .document(cleaned_interval_id)
+            )
+            snapshot = await self._maybe_await(interval_ref.get())
+            if not bool(getattr(snapshot, "exists", False)):
+                raise HuckleberryClientError(
+                    f"Interval {cleaned_interval_id} was not found"
+                )
+
+            payload = self._to_dict(snapshot.to_dict())
+            await self._record_deleted_interval(
+                collection_name=collection_name,
+                child_uid=child_uid,
+                interval_id=cleaned_interval_id,
+                payload=payload,
+            )
+
+            if callable(action):
+                await action(child_uid, interval_id=cleaned_interval_id)
+                return
+
+            await self._maybe_await(interval_ref.delete())
+        except HuckleberryClientError:
+            raise
+        except Exception as exc:  # pylint: disable=broad-except
+            raise HuckleberryTransportError(str(exc)) from exc
+
+    async def _record_deleted_interval(
+        self,
+        *,
+        collection_name: str,
+        child_uid: str,
+        interval_id: str,
+        payload: dict[str, Any],
+    ) -> None:
+        store = self._require_delete_log_storage()
+        entry = await store.async_append_entry(
+            collection_name=collection_name,
+            child_uid=child_uid,
+            interval_id=interval_id,
+            payload=payload,
+        )
+        _LOGGER.debug(
+            "Stored delete backup %s for %s/%s",
+            entry.get("log_id"),
+            collection_name,
+            interval_id,
+        )
+
+    def _require_delete_log_storage(self) -> HuckleberryDeleteLogStorage:
+        storage = self._get_delete_log_storage()
+        if storage is None:
+            raise HuckleberryClientError("Delete log storage is unavailable")
+        return storage
+
+    def _get_delete_log_storage(self) -> HuckleberryDeleteLogStorage | None:
+        if self._hass is None:
+            return None
+        if self._delete_log_storage is None:
+            self._delete_log_storage = HuckleberryDeleteLogStorage(
+                self._hass,
+                self._entry_id,
+            )
+        return self._delete_log_storage
 
     async def _build_api(self) -> Any:
         from huckleberry_api import HuckleberryAPI
