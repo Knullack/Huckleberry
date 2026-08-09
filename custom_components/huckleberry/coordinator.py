@@ -162,6 +162,12 @@ class HuckleberryDataUpdateCoordinator(DataUpdateCoordinator[dict[str, ChildSnap
             names.update({str(key): str(value) for key, value in data_names.items()})
         if isinstance(option_names, dict):
             names.update({str(key): str(value) for key, value in option_names.items()})
+
+        selected = [str(uid) for uid in self.selected_children if str(uid).strip()]
+        for index, uid in enumerate(selected):
+            if uid not in names:
+                names[uid] = f"Child {index + 1}"
+
         return names
 
     @property
