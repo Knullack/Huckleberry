@@ -32,7 +32,9 @@ from .const import (
     DATA_COORDINATOR,
     DOMAIN,
     PLATFORMS,
+    SERVICE_CREATE_SOLIDS_CUSTOM_FOOD,
     SERVICE_LIST_SOLIDS_CURATED_FOODS,
+    SERVICE_LIST_SOLIDS_CUSTOM_FOODS,
     SERVICE_NAMES,
     SERVICE_START_SLEEP,
 )
@@ -40,6 +42,12 @@ from .coordinator import HuckleberryDataUpdateCoordinator
 
 SERVICES_WITH_OPTIONAL_CHILD_TARGET = {
     SERVICE_LIST_SOLIDS_CURATED_FOODS,
+}
+
+SERVICES_WITH_RESPONSE_PAYLOAD = {
+    SERVICE_CREATE_SOLIDS_CUSTOM_FOOD,
+    SERVICE_LIST_SOLIDS_CURATED_FOODS,
+    SERVICE_LIST_SOLIDS_CUSTOM_FOODS,
 }
 
 
@@ -164,7 +172,11 @@ async def _async_register_services(hass: HomeAssistant) -> None:
     for service_name in SERVICE_NAMES:
         register_kwargs: dict[str, Any] = {}
         if SupportsResponse is not None:
-            register_kwargs["supports_response"] = SupportsResponse.OPTIONAL
+            register_kwargs["supports_response"] = (
+                SupportsResponse.OPTIONAL
+                if service_name in SERVICES_WITH_RESPONSE_PAYLOAD
+                else SupportsResponse.NONE
+            )
 
         hass.services.async_register(
             DOMAIN,
