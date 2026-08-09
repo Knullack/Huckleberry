@@ -6,15 +6,15 @@ from homeassistant.const import Platform
 
 DOMAIN = "huckleberry"
 
-PLATFORMS: list[Platform] = [
+PLATFORMS: list[str] = [
     Platform.SENSOR,
     Platform.BUTTON,
-    Platform.DATETIME,
-    Platform.NUMBER,
-    Platform.SELECT,
-    Platform.SWITCH,
-    Platform.TEXT,
 ]
+
+for _platform_name in ("DATETIME", "NUMBER", "SELECT", "SWITCH", "TEXT"):
+    _platform_value = getattr(Platform, _platform_name, None)
+    if _platform_value is not None:
+        PLATFORMS.append(_platform_value)
 
 CONF_EMAIL = "email"
 CONF_PASSWORD = "password"

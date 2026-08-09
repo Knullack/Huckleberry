@@ -4,6 +4,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.6] - 2026-08-09
+### Fixed
+- Guarded optional control platform registration so the integration does not
+	fail setup on Home Assistant builds that do not expose newer Platform enum
+	members.
+
+### Result
+- Control entities can load again instead of showing only stale unavailable
+	sensors after setup failure.
+
 ## [0.1.5] - 2026-08-09
 ### Added
 - Native dashboard form entities (datetime, number, select, switch, text)
