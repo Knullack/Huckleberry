@@ -20,6 +20,8 @@ from .const import (
     ATTR_DIAPER_RASH,
     ATTR_DURATION_SECONDS,
     ATTR_END_TIME,
+    ATTR_INTERVAL_ID,
+    ATTR_LOG_ID,
     ATTR_MODE,
     ATTR_NOTES,
     ATTR_PEE_AMOUNT,
@@ -32,12 +34,17 @@ from .const import (
     SERVICE_CANCEL_SLEEP,
     SERVICE_COMPLETE_NURSING,
     SERVICE_COMPLETE_SLEEP,
+    SERVICE_DELETE_BOTTLE,
+    SERVICE_DELETE_DIAPER,
+    SERVICE_DELETE_SLEEP,
+    SERVICE_LIST_DELETED_INTERVALS,
     SERVICE_LOG_ACTIVITY,
     SERVICE_LOG_BOTTLE,
     SERVICE_LOG_DIAPER,
     SERVICE_LOG_SLEEP,
     SERVICE_PAUSE_NURSING,
     SERVICE_PAUSE_SLEEP,
+    SERVICE_RESTORE_DELETED_INTERVAL,
     SERVICE_RESUME_NURSING,
     SERVICE_RESUME_SLEEP,
     SERVICE_START_NURSING,
@@ -82,6 +89,13 @@ FORM_ACTION_LOG_BOTTLE = "log_bottle"
 FORM_ACTION_LOG_DIAPER = "log_diaper"
 FORM_ACTION_LOG_ACTIVITY = "log_activity"
 FORM_ACTION_LOG_SLEEP = "log_sleep"
+FORM_ACTION_DELETE_LAST_SLEEP = "delete_last_sleep"
+FORM_ACTION_DELETE_LAST_BOTTLE = "delete_last_bottle"
+FORM_ACTION_DELETE_LAST_DIAPER = "delete_last_diaper"
+FORM_ACTION_CORRECT_LAST_SLEEP = "correct_last_sleep"
+FORM_ACTION_CORRECT_LAST_BOTTLE = "correct_last_bottle"
+FORM_ACTION_CORRECT_LAST_DIAPER = "correct_last_diaper"
+FORM_ACTION_RESTORE_LAST_DELETED = "restore_last_deleted"
 
 
 BUTTONS: tuple[HuckleberryButtonDescription, ...] = (
@@ -178,6 +192,55 @@ BUTTONS: tuple[HuckleberryButtonDescription, ...] = (
         icon="mdi:sleep",
         service=SERVICE_LOG_SLEEP,
         form_action=FORM_ACTION_LOG_SLEEP,
+    ),
+    HuckleberryButtonDescription(
+        key="delete_last_sleep",
+        name="Delete Last Sleep",
+        icon="mdi:delete-clock",
+        service=SERVICE_DELETE_SLEEP,
+        form_action=FORM_ACTION_DELETE_LAST_SLEEP,
+    ),
+    HuckleberryButtonDescription(
+        key="delete_last_bottle",
+        name="Delete Last Bottle",
+        icon="mdi:delete",
+        service=SERVICE_DELETE_BOTTLE,
+        form_action=FORM_ACTION_DELETE_LAST_BOTTLE,
+    ),
+    HuckleberryButtonDescription(
+        key="delete_last_diaper",
+        name="Delete Last Diaper",
+        icon="mdi:delete",
+        service=SERVICE_DELETE_DIAPER,
+        form_action=FORM_ACTION_DELETE_LAST_DIAPER,
+    ),
+    HuckleberryButtonDescription(
+        key="correct_last_sleep",
+        name="Correct Last Sleep (Form)",
+        icon="mdi:playlist-edit",
+        service=SERVICE_LOG_SLEEP,
+        form_action=FORM_ACTION_CORRECT_LAST_SLEEP,
+    ),
+    HuckleberryButtonDescription(
+        key="correct_last_bottle",
+        name="Correct Last Bottle (Form)",
+        icon="mdi:playlist-edit",
+        service=SERVICE_LOG_BOTTLE,
+        form_action=FORM_ACTION_CORRECT_LAST_BOTTLE,
+    ),
+    HuckleberryButtonDescription(
+        key="correct_last_diaper",
+        name="Correct Last Diaper (Form)",
+        icon="mdi:playlist-edit",
+        service=SERVICE_LOG_DIAPER,
+        form_action=FORM_ACTION_CORRECT_LAST_DIAPER,
+    ),
+    HuckleberryButtonDescription(
+        key="restore_last_deleted",
+        name="Restore Last Deleted",
+        icon="mdi:restore",
+        service=SERVICE_RESTORE_DELETED_INTERVAL,
+        form_action=FORM_ACTION_RESTORE_LAST_DELETED,
     ),
 )
 
@@ -280,6 +343,29 @@ class HuckleberrySleepControlButton(
                 f"Action {self.entity_description.service} is not currently available"
             )
 
+        action = self.entity_description.form_action
+        if action == FORM_ACTION_DELETE_LAST_SLEEP:
+            await self._async_delete_last_sleep()
+            return
+        if action == FORM_ACTION_DELETE_LAST_BOTTLE:
+            await self._async_delete_last_bottle()
+            return
+        if action == FORM_ACTION_DELETE_LAST_DIAPER:
+            await self._async_delete_last_diaper()
+            return
+        if action == FORM_ACTION_CORRECT_LAST_SLEEP:
+            await self._async_correct_last_sleep()
+            return
+        if action == FORM_ACTION_CORRECT_LAST_BOTTLE:
+            await self._async_correct_last_bottle()
+            return
+        if action == FORM_ACTION_CORRECT_LAST_DIAPER:
+            await self._async_correct_last_diaper()
+            return
+        if action == FORM_ACTION_RESTORE_LAST_DELETED:
+            await self._async_restore_last_deleted()
+            return
+
         payload = self._build_form_payload()
         await self.coordinator.async_execute_service(
             self.entity_description.service,
@@ -288,12 +374,32 @@ class HuckleberrySleepControlButton(
         )
 
     def _can_press(self) -> bool:
-        if self.entity_description.form_action is not None:
+        action = self.entity_description.form_action
+        if action in {
+            FORM_ACTION_LOG_BOTTLE,
+            FORM_ACTION_LOG_DIAPER,
+            FORM_ACTION_LOG_ACTIVITY,
+            FORM_ACTION_LOG_SLEEP,
+            FORM_ACTION_RESTORE_LAST_DELETED,
+        }:
             return True
 
         snapshot = self.snapshot
         if snapshot is None:
             return False
+
+        if action == FORM_ACTION_DELETE_LAST_SLEEP:
+            return self._last_sleep_interval_id(snapshot) is not None
+        if action == FORM_ACTION_DELETE_LAST_BOTTLE:
+            return self._last_bottle_interval_id(snapshot) is not None
+        if action == FORM_ACTION_DELETE_LAST_DIAPER:
+            return self._last_diaper_interval_id(snapshot) is not None
+        if action == FORM_ACTION_CORRECT_LAST_SLEEP:
+            return self._last_sleep_interval_id(snapshot) is not None
+        if action == FORM_ACTION_CORRECT_LAST_BOTTLE:
+            return self._last_bottle_interval_id(snapshot) is not None
+        if action == FORM_ACTION_CORRECT_LAST_DIAPER:
+            return self._last_diaper_interval_id(snapshot) is not None
 
         timer = snapshot.timer
         service = self.entity_description.service
@@ -314,15 +420,25 @@ class HuckleberrySleepControlButton(
         if action is None:
             return None
 
+        if action == FORM_ACTION_CORRECT_LAST_SLEEP:
+            action = FORM_ACTION_LOG_SLEEP
+        elif action == FORM_ACTION_CORRECT_LAST_BOTTLE:
+            action = FORM_ACTION_LOG_BOTTLE
+        elif action == FORM_ACTION_CORRECT_LAST_DIAPER:
+            action = FORM_ACTION_LOG_DIAPER
+
         values = self.coordinator.get_form_values(self._child_uid)
 
         if action == FORM_ACTION_LOG_BOTTLE:
-            return {
+            payload: dict[str, Any] = {
                 ATTR_AMOUNT: values.get(FIELD_BOTTLE_AMOUNT),
                 ATTR_UNITS: values.get(FIELD_BOTTLE_UNITS),
-                ATTR_BOTTLE_TYPE: optional_select_value(values.get(FIELD_BOTTLE_TYPE)),
                 ATTR_START_TIME: values.get(FIELD_BOTTLE_DATETIME),
             }
+            bottle_type = optional_select_value(values.get(FIELD_BOTTLE_TYPE))
+            if bottle_type is not None:
+                payload[ATTR_BOTTLE_TYPE] = bottle_type
+            return payload
 
         if action == FORM_ACTION_LOG_DIAPER:
             return {
@@ -353,3 +469,118 @@ class HuckleberrySleepControlButton(
             }
 
         return None
+
+    async def _async_delete_last_sleep(self) -> None:
+        snapshot = self._require_snapshot()
+        interval_id = self._last_sleep_interval_id(snapshot)
+        if interval_id is None:
+            raise HomeAssistantError("No sleep event is available to delete")
+
+        await self.coordinator.async_execute_service(
+            SERVICE_DELETE_SLEEP,
+            self._child_uid,
+            {ATTR_INTERVAL_ID: interval_id},
+        )
+
+    async def _async_delete_last_bottle(self) -> None:
+        snapshot = self._require_snapshot()
+        interval_id = self._last_bottle_interval_id(snapshot)
+        if interval_id is None:
+            raise HomeAssistantError("No bottle event is available to delete")
+
+        await self.coordinator.async_execute_service(
+            SERVICE_DELETE_BOTTLE,
+            self._child_uid,
+            {ATTR_INTERVAL_ID: interval_id},
+        )
+
+    async def _async_delete_last_diaper(self) -> None:
+        snapshot = self._require_snapshot()
+        interval_id = self._last_diaper_interval_id(snapshot)
+        if interval_id is None:
+            raise HomeAssistantError("No diaper event is available to delete")
+
+        await self.coordinator.async_execute_service(
+            SERVICE_DELETE_DIAPER,
+            self._child_uid,
+            {ATTR_INTERVAL_ID: interval_id},
+        )
+
+    async def _async_correct_last_sleep(self) -> None:
+        await self._async_delete_last_sleep()
+        payload = self._build_form_payload()
+        await self.coordinator.async_execute_service(
+            SERVICE_LOG_SLEEP,
+            self._child_uid,
+            payload,
+        )
+
+    async def _async_correct_last_bottle(self) -> None:
+        await self._async_delete_last_bottle()
+        payload = self._build_form_payload()
+        await self.coordinator.async_execute_service(
+            SERVICE_LOG_BOTTLE,
+            self._child_uid,
+            payload,
+        )
+
+    async def _async_correct_last_diaper(self) -> None:
+        await self._async_delete_last_diaper()
+        payload = self._build_form_payload()
+        await self.coordinator.async_execute_service(
+            SERVICE_LOG_DIAPER,
+            self._child_uid,
+            payload,
+        )
+
+    async def _async_restore_last_deleted(self) -> None:
+        response = await self.coordinator.async_execute_service(
+            SERVICE_LIST_DELETED_INTERVALS,
+            self._child_uid,
+            {"limit": 1},
+        )
+        entries = response.get("entries", []) if isinstance(response, dict) else []
+        if not entries:
+            raise HomeAssistantError("No deleted intervals are available to restore")
+
+        first = entries[0]
+        log_id = str(first.get("log_id", "")).strip()
+        if not log_id:
+            raise HomeAssistantError(
+                "Latest delete-log entry does not include a log_id"
+            )
+
+        await self.coordinator.async_execute_service(
+            SERVICE_RESTORE_DELETED_INTERVAL,
+            self._child_uid,
+            {ATTR_LOG_ID: log_id},
+        )
+
+    def _require_snapshot(self) -> ChildSnapshot:
+        snapshot = self.snapshot
+        if snapshot is None:
+            raise HomeAssistantError("No child snapshot is currently available")
+        return snapshot
+
+    @staticmethod
+    def _last_sleep_interval_id(snapshot: ChildSnapshot) -> str | None:
+        if not snapshot.sleep_events:
+            return None
+        value = snapshot.sleep_events[-1].source_id.strip()
+        return value or None
+
+    @staticmethod
+    def _last_bottle_interval_id(snapshot: ChildSnapshot) -> str | None:
+        for event in reversed(snapshot.feed_events):
+            mode = (event.mode or "").strip().casefold()
+            if mode == "bottle" or (not mode and event.amount is not None):
+                value = event.source_id.strip()
+                return value or None
+        return None
+
+    @staticmethod
+    def _last_diaper_interval_id(snapshot: ChildSnapshot) -> str | None:
+        if not snapshot.diaper_events:
+            return None
+        value = snapshot.diaper_events[-1].source_id.strip()
+        return value or None
