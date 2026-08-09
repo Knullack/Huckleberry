@@ -66,6 +66,11 @@ def _install_module_stubs() -> None:
 
             SENSOR = "sensor"
             BUTTON = "button"
+            DATETIME = "datetime"
+            NUMBER = "number"
+            SELECT = "select"
+            SWITCH = "switch"
+            TEXT = "text"
 
         class HomeAssistant:  # noqa: D401
             """Minimal Home Assistant stub."""

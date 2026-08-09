@@ -113,6 +113,7 @@ from .const import (
     SERVICE_START_SLEEP,
     SERVICE_SWITCH_NURSING_SIDE,
 )
+from .form_state import default_form_values
 from .models import (
     ActivityEvent,
     AnalyticsSnapshot,
@@ -145,6 +146,7 @@ class HuckleberryDataUpdateCoordinator(DataUpdateCoordinator[dict[str, ChildSnap
         self._listeners_started = False
         self._listener_refresh_scheduled = False
         self._session_unsubscribe: Callable[[], None] | None = None
+        self._form_values: dict[str, dict[str, Any]] = {}
         super().__init__(
             hass,
             _LOGGER,
@@ -419,6 +421,30 @@ class HuckleberryDataUpdateCoordinator(DataUpdateCoordinator[dict[str, ChildSnap
         if not self.data:
             return None
         return self.data.get(child_uid)
+
+    def get_form_values(self, child_uid: str) -> dict[str, Any]:
+        return dict(self._ensure_form_values(child_uid))
+
+    def get_form_value(self, child_uid: str, key: str) -> Any:
+        return self._ensure_form_values(child_uid).get(key)
+
+    def set_form_value(self, child_uid: str, key: str, value: Any) -> None:
+        values = self._ensure_form_values(child_uid)
+        if isinstance(value, datetime) and value.tzinfo is None:
+            value = value.replace(tzinfo=UTC)
+        values[key] = value
+
+    def _ensure_form_values(self, child_uid: str) -> dict[str, Any]:
+        if child_uid not in self.selected_children:
+            raise HomeAssistantError(
+                f"Unknown child UID {child_uid}. "
+                "Verify selected children in integration options."
+            )
+
+        if child_uid not in self._form_values:
+            self._form_values[child_uid] = default_form_values()
+
+        return self._form_values[child_uid]
 
     async def async_execute_service(
         self,

@@ -6,7 +6,15 @@ from homeassistant.const import Platform
 
 DOMAIN = "huckleberry"
 
-PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.BUTTON]
+PLATFORMS: list[Platform] = [
+    Platform.SENSOR,
+    Platform.BUTTON,
+    Platform.DATETIME,
+    Platform.NUMBER,
+    Platform.SELECT,
+    Platform.SWITCH,
+    Platform.TEXT,
+]
 
 CONF_EMAIL = "email"
 CONF_PASSWORD = "password"

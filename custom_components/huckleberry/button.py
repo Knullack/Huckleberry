@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
@@ -12,12 +13,29 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
+    ATTR_AMOUNT,
+    ATTR_BOTTLE_TYPE,
+    ATTR_COLOR,
+    ATTR_CONSISTENCY,
+    ATTR_DIAPER_RASH,
+    ATTR_DURATION_SECONDS,
+    ATTR_END_TIME,
+    ATTR_MODE,
+    ATTR_NOTES,
+    ATTR_PEE_AMOUNT,
+    ATTR_POO_AMOUNT,
+    ATTR_START_TIME,
+    ATTR_UNITS,
     DATA_COORDINATOR,
     DOMAIN,
     SERVICE_CANCEL_NURSING,
     SERVICE_CANCEL_SLEEP,
     SERVICE_COMPLETE_NURSING,
     SERVICE_COMPLETE_SLEEP,
+    SERVICE_LOG_ACTIVITY,
+    SERVICE_LOG_BOTTLE,
+    SERVICE_LOG_DIAPER,
+    SERVICE_LOG_SLEEP,
     SERVICE_PAUSE_NURSING,
     SERVICE_PAUSE_SLEEP,
     SERVICE_RESUME_NURSING,
@@ -27,6 +45,27 @@ from .const import (
     SERVICE_SWITCH_NURSING_SIDE,
 )
 from .coordinator import HuckleberryDataUpdateCoordinator
+from .form_state import (
+    FIELD_ACTIVITY_DATETIME,
+    FIELD_ACTIVITY_DURATION,
+    FIELD_ACTIVITY_NOTES,
+    FIELD_ACTIVITY_TYPE,
+    FIELD_BOTTLE_AMOUNT,
+    FIELD_BOTTLE_DATETIME,
+    FIELD_BOTTLE_TYPE,
+    FIELD_BOTTLE_UNITS,
+    FIELD_DIAPER_DATETIME,
+    FIELD_DIAPER_MODE,
+    FIELD_DIAPER_NOTES,
+    FIELD_DIAPER_RASH,
+    FIELD_PEE_AMOUNT,
+    FIELD_POO_AMOUNT,
+    FIELD_POO_COLOR,
+    FIELD_POO_CONSISTENCY,
+    FIELD_SLEEP_END,
+    FIELD_SLEEP_START,
+    optional_select_value,
+)
 from .models import ChildSnapshot
 
 
@@ -36,6 +75,13 @@ class HuckleberryButtonDescription:
     name: str
     icon: str
     service: str
+    form_action: str | None = None
+
+
+FORM_ACTION_LOG_BOTTLE = "log_bottle"
+FORM_ACTION_LOG_DIAPER = "log_diaper"
+FORM_ACTION_LOG_ACTIVITY = "log_activity"
+FORM_ACTION_LOG_SLEEP = "log_sleep"
 
 
 BUTTONS: tuple[HuckleberryButtonDescription, ...] = (
@@ -104,6 +150,34 @@ BUTTONS: tuple[HuckleberryButtonDescription, ...] = (
         name="Cancel Nursing",
         icon="mdi:close-circle-outline",
         service=SERVICE_CANCEL_NURSING,
+    ),
+    HuckleberryButtonDescription(
+        key="log_bottle_form",
+        name="Log Bottle (Form)",
+        icon="mdi:baby-bottle",
+        service=SERVICE_LOG_BOTTLE,
+        form_action=FORM_ACTION_LOG_BOTTLE,
+    ),
+    HuckleberryButtonDescription(
+        key="log_diaper_form",
+        name="Log Diaper (Form)",
+        icon="mdi:baby-face-outline",
+        service=SERVICE_LOG_DIAPER,
+        form_action=FORM_ACTION_LOG_DIAPER,
+    ),
+    HuckleberryButtonDescription(
+        key="log_activity_form",
+        name="Log Activity (Form)",
+        icon="mdi:run",
+        service=SERVICE_LOG_ACTIVITY,
+        form_action=FORM_ACTION_LOG_ACTIVITY,
+    ),
+    HuckleberryButtonDescription(
+        key="log_sleep_form",
+        name="Log Sleep (Form)",
+        icon="mdi:sleep",
+        service=SERVICE_LOG_SLEEP,
+        form_action=FORM_ACTION_LOG_SLEEP,
     ),
 )
 
@@ -188,6 +262,9 @@ class HuckleberrySleepControlButton(
 
     @property
     def entity_registry_enabled_default(self) -> bool:
+        if self.entity_description.form_action is not None:
+            return True
+
         return self.entity_description.service in {
             SERVICE_START_SLEEP,
             SERVICE_COMPLETE_SLEEP,
@@ -203,12 +280,17 @@ class HuckleberrySleepControlButton(
                 f"Action {self.entity_description.service} is not currently available"
             )
 
+        payload = self._build_form_payload()
         await self.coordinator.async_execute_service(
             self.entity_description.service,
             self._child_uid,
+            payload,
         )
 
     def _can_press(self) -> bool:
+        if self.entity_description.form_action is not None:
+            return True
+
         snapshot = self.snapshot
         if snapshot is None:
             return False
@@ -226,3 +308,48 @@ class HuckleberrySleepControlButton(
             return timer.active and timer.paused
 
         return service in NURSING_SERVICES
+
+    def _build_form_payload(self) -> dict[str, Any] | None:
+        action = self.entity_description.form_action
+        if action is None:
+            return None
+
+        values = self.coordinator.get_form_values(self._child_uid)
+
+        if action == FORM_ACTION_LOG_BOTTLE:
+            return {
+                ATTR_AMOUNT: values.get(FIELD_BOTTLE_AMOUNT),
+                ATTR_UNITS: values.get(FIELD_BOTTLE_UNITS),
+                ATTR_BOTTLE_TYPE: optional_select_value(values.get(FIELD_BOTTLE_TYPE)),
+                ATTR_START_TIME: values.get(FIELD_BOTTLE_DATETIME),
+            }
+
+        if action == FORM_ACTION_LOG_DIAPER:
+            return {
+                ATTR_MODE: values.get(FIELD_DIAPER_MODE),
+                ATTR_PEE_AMOUNT: optional_select_value(values.get(FIELD_PEE_AMOUNT)),
+                ATTR_POO_AMOUNT: optional_select_value(values.get(FIELD_POO_AMOUNT)),
+                ATTR_COLOR: optional_select_value(values.get(FIELD_POO_COLOR)),
+                ATTR_CONSISTENCY: optional_select_value(
+                    values.get(FIELD_POO_CONSISTENCY)
+                ),
+                ATTR_DIAPER_RASH: bool(values.get(FIELD_DIAPER_RASH)),
+                ATTR_NOTES: values.get(FIELD_DIAPER_NOTES),
+                ATTR_START_TIME: values.get(FIELD_DIAPER_DATETIME),
+            }
+
+        if action == FORM_ACTION_LOG_ACTIVITY:
+            return {
+                ATTR_MODE: values.get(FIELD_ACTIVITY_TYPE),
+                ATTR_DURATION_SECONDS: values.get(FIELD_ACTIVITY_DURATION),
+                ATTR_NOTES: values.get(FIELD_ACTIVITY_NOTES),
+                ATTR_START_TIME: values.get(FIELD_ACTIVITY_DATETIME),
+            }
+
+        if action == FORM_ACTION_LOG_SLEEP:
+            return {
+                ATTR_START_TIME: values.get(FIELD_SLEEP_START),
+                ATTR_END_TIME: values.get(FIELD_SLEEP_END),
+            }
+
+        return None
