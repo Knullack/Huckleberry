@@ -1,0 +1,111 @@
+{
+  "title": "Huckleberry",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect Huckleberry",
+        "description": "Enter your Huckleberry account credentials.",
+        "data": {
+          "email": "Email",
+          "password": "Password",
+          "timezone": "Timezone"
+        }
+      },
+      "select_children": {
+        "title": "Select children",
+        "description": "Choose one or more children to manage in Home Assistant.",
+        "data": {
+          "children": "Children"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Reconnect Huckleberry",
+        "description": "Update credentials for this account.",
+        "data": {
+          "password": "Password",
+          "timezone": "Timezone"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to Huckleberry.",
+      "invalid_auth": "Invalid email or password.",
+      "no_children": "No children were found for this account.",
+      "select_at_least_one_child": "Select at least one child.",
+      "unknown": "Unexpected error. Check logs for details."
+    },
+    "abort": {
+      "already_configured": "This account is already configured.",
+      "reauth_successful": "Re-authentication completed."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Integration options",
+        "description": "Adjust child selection and analytics behavior.",
+        "data": {
+          "children": "Children",
+          "update_interval_seconds": "Update interval (seconds)",
+          "lookback_hours": "History lookback (hours)",
+          "night_start_hour": "Night starts at hour (0-23)",
+          "night_end_hour": "Night ends at hour (0-23)",
+          "enable_realtime_listeners": "Enable realtime listeners",
+          "session_heartbeat_minutes": "Session heartbeat interval (minutes)"
+        }
+      }
+    }
+  },
+  "services": {
+    "start_sleep": {
+      "name": "Start sleep",
+      "description": "Start an active sleep timer for a child.",
+      "fields": {
+        "child_uid": {
+          "name": "Child UID",
+          "description": "Unique child identifier from Huckleberry."
+        }
+      }
+    },
+    "complete_sleep": {
+      "name": "Complete sleep",
+      "description": "Complete and save the active sleep timer.",
+      "fields": {
+        "child_uid": {
+          "name": "Child UID",
+          "description": "Unique child identifier from Huckleberry."
+        }
+      }
+    },
+    "cancel_sleep": {
+      "name": "Cancel sleep",
+      "description": "Cancel the active sleep timer without saving an interval.",
+      "fields": {
+        "child_uid": {
+          "name": "Child UID",
+          "description": "Unique child identifier from Huckleberry."
+        }
+      }
+    },
+    "pause_sleep": {
+      "name": "Pause sleep",
+      "description": "Pause the active sleep timer.",
+      "fields": {
+        "child_uid": {
+          "name": "Child UID",
+          "description": "Unique child identifier from Huckleberry."
+        }
+      }
+    },
+    "resume_sleep": {
+      "name": "Resume sleep",
+      "description": "Resume a paused sleep timer.",
+      "fields": {
+        "child_uid": {
+          "name": "Child UID",
+          "description": "Unique child identifier from Huckleberry."
+        }
+      }
+    }
+  }
+}

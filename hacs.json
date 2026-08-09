@@ -1,0 +1,13 @@
+{
+  "name": "Huckleberry",
+  "content_in_root": false,
+  "country": [
+    "US"
+  ],
+  "homeassistant": "2026.8.0",
+  "domains": [
+    "huckleberry"
+  ],
+  "iot_class": "cloud_polling",
+  "render_readme": true
+}

@@ -1,0 +1,45 @@
+# Python caches and build artifacts
+__pycache__/
+*.py[cod]
+*.so
+*.egg-info/
+.build/
+dist/
+
+# Virtual environments
+.venv/
+venv/
+
+# Test artifacts
+.coverage
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+
+# IDE/editor
+.vscode/
+.idea/
+
+# Local secrets and environment files
+.env
+*.env
+secrets/
+credentials/
+
+# OS artifacts
+.DS_Store
+Thumbs.db
+
+# Private/local-only dashboard and script files
+docs/huckleberry_alanis_dashboard_page.yaml
+docs/huckleberry_alanis_scripts.yaml
+docs/local/
+private/
+
+# Local analysis and probe artifacts
+*_capability_report_*.md
+*_deep_probe_*.md
+*_complete_inventory_*.txt
+*.local.md
+*.local.txt

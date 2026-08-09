@@ -1,0 +1,19 @@
+{
+  "domain": "huckleberry",
+  "name": "Huckleberry",
+  "codeowners": [
+    "@Knullack"
+  ],
+  "config_flow": true,
+  "documentation": "https://github.com/Knullack/Huckleberry",
+  "issue_tracker": "https://github.com/Knullack/Huckleberry/issues",
+  "homeassistant": "2026.8.0",
+  "iot_class": "cloud_polling",
+  "loggers": [
+    "huckleberry_api"
+  ],
+  "requirements": [
+    "huckleberry-api==0.4.3"
+  ],
+  "version": "0.1.0"
+}

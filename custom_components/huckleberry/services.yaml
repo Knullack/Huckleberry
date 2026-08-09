@@ -1,0 +1,841 @@
+start_sleep:
+  name: Start sleep
+  description: Start a sleep timer for a child.
+  fields:
+    child_uid:
+      name: Child UID
+      description: Optional when one child is configured; required for multi-child setups.
+      required: false
+      selector:
+        text:
+    child_name:
+      name: Child Name
+      description: Optional configured child name; use this instead of child_uid.
+      required: false
+      selector:
+        text:
+
+complete_sleep:
+  name: Complete sleep
+  description: Complete and save the active sleep timer for a child.
+  fields:
+    child_uid:
+      name: Child UID
+      description: Optional when one child is configured; required for multi-child setups.
+      required: false
+      selector:
+        text:
+    child_name:
+      name: Child Name
+      description: Optional configured child name; use this instead of child_uid.
+      required: false
+      selector:
+        text:
+
+cancel_sleep:
+  name: Cancel sleep
+  description: Cancel the active sleep timer for a child without saving an interval.
+  fields:
+    child_uid:
+      name: Child UID
+      description: Optional when one child is configured; required for multi-child setups.
+      required: false
+      selector:
+        text:
+    child_name:
+      name: Child Name
+      description: Optional configured child name; use this instead of child_uid.
+      required: false
+      selector:
+        text:
+
+pause_sleep:
+  name: Pause sleep
+  description: Pause the active sleep timer for a child.
+  fields:
+    child_uid:
+      name: Child UID
+      description: Optional when one child is configured; required for multi-child setups.
+      required: false
+      selector:
+        text:
+    child_name:
+      name: Child Name
+      description: Optional configured child name; use this instead of child_uid.
+      required: false
+      selector:
+        text:
+
+resume_sleep:
+  name: Resume sleep
+  description: Resume a paused sleep timer for a child.
+  fields:
+    child_uid:
+      name: Child UID
+      description: Optional when one child is configured; required for multi-child setups.
+      required: false
+      selector:
+        text:
+    child_name:
+      name: Child Name
+      description: Optional configured child name; use this instead of child_uid.
+      required: false
+      selector:
+        text:
+
+log_sleep:
+  name: Log sleep
+  description: Log a completed sleep event by start and end timestamps.
+  fields:
+    child_uid:
+      name: Child UID
+      description: Optional when one child is configured; required for multi-child setups.
+      required: false
+      selector:
+        text:
+    child_name:
+      name: Child Name
+      description: Optional configured child name; use this instead of child_uid.
+      required: false
+      selector:
+        text:
+    start_time:
+      name: Start Time
+      description: Sleep start timestamp (ISO-8601).
+      required: true
+      selector:
+        text:
+    end_time:
+      name: End Time
+      description: Sleep end timestamp (ISO-8601).
+      required: true
+      selector:
+        text:
+
+start_nursing:
+  name: Start nursing
+  description: Start a nursing timer for a child.
+  fields:
+    child_uid:
+      name: Child UID
+      description: Optional when one child is configured; required for multi-child setups.
+      required: false
+      selector:
+        text:
+    child_name:
+      name: Child Name
+      description: Optional configured child name; use this instead of child_uid.
+      required: false
+      selector:
+        text:
+    side:
+      name: Side
+      description: Nursing side to start with.
+      required: false
+      selector:
+        select:
+          options:
+            - left
+            - right
+
+pause_nursing:
+  name: Pause nursing
+  description: Pause the active nursing timer.
+  fields:
+    child_uid:
+      name: Child UID
+      description: Optional when one child is configured; required for multi-child setups.
+      required: false
+      selector:
+        text:
+    child_name:
+      name: Child Name
+      description: Optional configured child name; use this instead of child_uid.
+      required: false
+      selector:
+        text:
+
+resume_nursing:
+  name: Resume nursing
+  description: Resume a paused nursing timer.
+  fields:
+    child_uid:
+      name: Child UID
+      description: Optional when one child is configured; required for multi-child setups.
+      required: false
+      selector:
+        text:
+    child_name:
+      name: Child Name
+      description: Optional configured child name; use this instead of child_uid.
+      required: false
+      selector:
+        text:
+    side:
+      name: Side
+      description: Optional side to resume with.
+      required: false
+      selector:
+        select:
+          options:
+            - left
+            - right
+
+switch_nursing_side:
+  name: Switch nursing side
+  description: Switch active nursing side from left to right or right to left.
+  fields:
+    child_uid:
+      name: Child UID
+      description: Optional when one child is configured; required for multi-child setups.
+      required: false
+      selector:
+        text:
+    child_name:
+      name: Child Name
+      description: Optional configured child name; use this instead of child_uid.
+      required: false
+      selector:
+        text:
+
+complete_nursing:
+  name: Complete nursing
+  description: Complete and save the active nursing timer.
+  fields:
+    child_uid:
+      name: Child UID
+      description: Optional when one child is configured; required for multi-child setups.
+      required: false
+      selector:
+        text:
+    child_name:
+      name: Child Name
+      description: Optional configured child name; use this instead of child_uid.
+      required: false
+      selector:
+        text:
+
+cancel_nursing:
+  name: Cancel nursing
+  description: Cancel the active nursing timer without saving an entry.
+  fields:
+    child_uid:
+      name: Child UID
+      description: Optional when one child is configured; required for multi-child setups.
+      required: false
+      selector:
+        text:
+    child_name:
+      name: Child Name
+      description: Optional configured child name; use this instead of child_uid.
+      required: false
+      selector:
+        text:
+
+log_nursing:
+  name: Log nursing
+  description: Log a completed nursing session with explicit times.
+  fields:
+    child_uid:
+      name: Child UID
+      description: Optional when one child is configured; required for multi-child setups.
+      required: false
+      selector:
+        text:
+    child_name:
+      name: Child Name
+      description: Optional configured child name; use this instead of child_uid.
+      required: false
+      selector:
+        text:
+    start_time:
+      name: Start Time
+      description: Nursing start timestamp (ISO-8601).
+      required: true
+      selector:
+        text:
+    end_time:
+      name: End Time
+      description: Nursing end timestamp (ISO-8601).
+      required: true
+      selector:
+        text:
+    side:
+      name: Side
+      description: Active side for this nursing interval.
+      required: false
+      selector:
+        select:
+          options:
+            - left
+            - right
+    left_duration_seconds:
+      name: Left Duration (seconds)
+      description: Optional explicit left-side duration in seconds.
+      required: false
+      selector:
+        number:
+          min: 0
+          step: 1
+          mode: box
+    right_duration_seconds:
+      name: Right Duration (seconds)
+      description: Optional explicit right-side duration in seconds.
+      required: false
+      selector:
+        number:
+          min: 0
+          step: 1
+          mode: box
+
+log_bottle:
+  name: Log bottle
+  description: Log a bottle feed event.
+  fields:
+    child_uid:
+      name: Child UID
+      description: Optional when one child is configured; required for multi-child setups.
+      required: false
+      selector:
+        text:
+    child_name:
+      name: Child Name
+      description: Optional configured child name; use this instead of child_uid.
+      required: false
+      selector:
+        text:
+    amount:
+      name: Amount
+      description: Bottle amount.
+      required: true
+      selector:
+        number:
+          min: 0
+          step: 0.1
+          mode: box
+    units:
+      name: Units
+      description: Bottle units.
+      required: false
+      selector:
+        select:
+          options:
+            - ml
+            - oz
+    bottle_type:
+      name: Bottle Type
+      description: Bottle contents type.
+      required: false
+      selector:
+        select:
+          options:
+            - Breast Milk
+            - Formula
+            - Tube Feeding
+            - Cow Milk
+            - Goat Milk
+            - Soy Milk
+            - Other
+    start_time:
+      name: Start Time
+      description: Optional event timestamp (ISO-8601). Defaults to now.
+      required: false
+      selector:
+        text:
+
+log_diaper:
+  name: Log diaper
+  description: Log a diaper event.
+  fields:
+    child_uid:
+      name: Child UID
+      description: Optional when one child is configured; required for multi-child setups.
+      required: false
+      selector:
+        text:
+    child_name:
+      name: Child Name
+      description: Optional configured child name; use this instead of child_uid.
+      required: false
+      selector:
+        text:
+    mode:
+      name: Mode
+      description: Diaper mode.
+      required: true
+      selector:
+        select:
+          options:
+            - pee
+            - poo
+            - both
+            - dry
+    pee_amount:
+      name: Pee Amount
+      description: Optional pee amount category.
+      required: false
+      selector:
+        select:
+          options:
+            - little
+            - medium
+            - big
+    poo_amount:
+      name: Poo Amount
+      description: Optional poo amount category.
+      required: false
+      selector:
+        select:
+          options:
+            - little
+            - medium
+            - big
+    color:
+      name: Poo Color
+      description: Optional poo color.
+      required: false
+      selector:
+        select:
+          options:
+            - yellow
+            - brown
+            - black
+            - green
+            - red
+            - gray
+    consistency:
+      name: Poo Consistency
+      description: Optional poo consistency.
+      required: false
+      selector:
+        select:
+          options:
+            - solid
+            - loose
+            - runny
+            - mucousy
+            - hard
+            - pebbles
+            - diarrhea
+    diaper_rash:
+      name: Diaper Rash
+      description: Whether diaper rash is present.
+      required: false
+      selector:
+        boolean:
+    notes:
+      name: Notes
+      description: Optional notes.
+      required: false
+      selector:
+        text:
+    start_time:
+      name: Start Time
+      description: Optional event timestamp (ISO-8601). Defaults to now.
+      required: false
+      selector:
+        text:
+
+log_potty:
+  name: Log potty
+  description: Log a potty event in the shared diaper tracker.
+  fields:
+    child_uid:
+      name: Child UID
+      description: Optional when one child is configured; required for multi-child setups.
+      required: false
+      selector:
+        text:
+    child_name:
+      name: Child Name
+      description: Optional configured child name; use this instead of child_uid.
+      required: false
+      selector:
+        text:
+    mode:
+      name: Mode
+      description: Potty mode.
+      required: true
+      selector:
+        select:
+          options:
+            - pee
+            - poo
+            - both
+            - dry
+    how_it_happened:
+      name: How It Happened
+      description: Potty outcome.
+      required: true
+      selector:
+        select:
+          options:
+            - satButDry
+            - wentPotty
+            - accident
+    pee_amount:
+      name: Pee Amount
+      description: Optional pee amount category.
+      required: false
+      selector:
+        select:
+          options:
+            - little
+            - medium
+            - big
+    poo_amount:
+      name: Poo Amount
+      description: Optional poo amount category.
+      required: false
+      selector:
+        select:
+          options:
+            - little
+            - medium
+            - big
+    color:
+      name: Poo Color
+      description: Optional poo color.
+      required: false
+      selector:
+        select:
+          options:
+            - yellow
+            - brown
+            - black
+            - green
+            - red
+            - gray
+    consistency:
+      name: Poo Consistency
+      description: Optional poo consistency.
+      required: false
+      selector:
+        select:
+          options:
+            - solid
+            - loose
+            - runny
+            - mucousy
+            - hard
+            - pebbles
+            - diarrhea
+    notes:
+      name: Notes
+      description: Optional notes.
+      required: false
+      selector:
+        text:
+    start_time:
+      name: Start Time
+      description: Optional event timestamp (ISO-8601). Defaults to now.
+      required: false
+      selector:
+        text:
+
+log_growth:
+  name: Log growth
+  description: Log growth measurements.
+  fields:
+    child_uid:
+      name: Child UID
+      description: Optional when one child is configured; required for multi-child setups.
+      required: false
+      selector:
+        text:
+    child_name:
+      name: Child Name
+      description: Optional configured child name; use this instead of child_uid.
+      required: false
+      selector:
+        text:
+    weight:
+      name: Weight
+      description: Optional weight measurement.
+      required: false
+      selector:
+        number:
+          min: 0
+          step: 0.01
+          mode: box
+    height:
+      name: Height
+      description: Optional height measurement.
+      required: false
+      selector:
+        number:
+          min: 0
+          step: 0.01
+          mode: box
+    head:
+      name: Head Circumference
+      description: Optional head circumference measurement.
+      required: false
+      selector:
+        number:
+          min: 0
+          step: 0.01
+          mode: box
+    growth_units:
+      name: Units
+      description: Measurement units.
+      required: false
+      selector:
+        select:
+          options:
+            - metric
+            - imperial
+    start_time:
+      name: Start Time
+      description: Optional event timestamp (ISO-8601). Defaults to now.
+      required: false
+      selector:
+        text:
+
+log_pump:
+  name: Log pump
+  description: Log a pump event.
+  fields:
+    child_uid:
+      name: Child UID
+      description: Optional when one child is configured; required for multi-child setups.
+      required: false
+      selector:
+        text:
+    child_name:
+      name: Child Name
+      description: Optional configured child name; use this instead of child_uid.
+      required: false
+      selector:
+        text:
+    total_amount:
+      name: Total Amount
+      description: Total pumped amount (use this or left/right amounts).
+      required: false
+      selector:
+        number:
+          min: 0
+          step: 0.1
+          mode: box
+    left_amount:
+      name: Left Amount
+      description: Left pumped amount (must include right_amount if used).
+      required: false
+      selector:
+        number:
+          min: 0
+          step: 0.1
+          mode: box
+    right_amount:
+      name: Right Amount
+      description: Right pumped amount (must include left_amount if used).
+      required: false
+      selector:
+        number:
+          min: 0
+          step: 0.1
+          mode: box
+    units:
+      name: Units
+      description: Pump amount units.
+      required: false
+      selector:
+        select:
+          options:
+            - ml
+            - oz
+    duration_seconds:
+      name: Duration (seconds)
+      description: Optional pumping duration in seconds.
+      required: false
+      selector:
+        number:
+          min: 0
+          step: 1
+          mode: box
+    notes:
+      name: Notes
+      description: Optional notes.
+      required: false
+      selector:
+        text:
+    start_time:
+      name: Start Time
+      description: Optional event timestamp (ISO-8601). Defaults to now.
+      required: false
+      selector:
+        text:
+
+log_activity:
+  name: Log activity
+  description: Log an activity event.
+  fields:
+    child_uid:
+      name: Child UID
+      description: Optional when one child is configured; required for multi-child setups.
+      required: false
+      selector:
+        text:
+    child_name:
+      name: Child Name
+      description: Optional configured child name; use this instead of child_uid.
+      required: false
+      selector:
+        text:
+    mode:
+      name: Mode
+      description: Activity mode.
+      required: true
+      selector:
+        select:
+          options:
+            - bath
+            - tummyTime
+            - storyTime
+            - screenTime
+            - skinToSkin
+            - outdoorPlay
+            - indoorPlay
+            - brushTeeth
+    duration_seconds:
+      name: Duration (seconds)
+      description: Optional duration in seconds.
+      required: false
+      selector:
+        number:
+          min: 0
+          step: 1
+          mode: box
+    notes:
+      name: Notes
+      description: Optional notes.
+      required: false
+      selector:
+        text:
+    start_time:
+      name: Start Time
+      description: Optional event timestamp (ISO-8601). Defaults to now.
+      required: false
+      selector:
+        text:
+
+log_solids:
+  name: Log solids
+  description: Log a solids feed event.
+  fields:
+    child_uid:
+      name: Child UID
+      description: Optional when one child is configured; required for multi-child setups.
+      required: false
+      selector:
+        text:
+    child_name:
+      name: Child Name
+      description: Optional configured child name; use this instead of child_uid.
+      required: false
+      selector:
+        text:
+    foods:
+      name: Foods
+      description: List of food objects with id, source, name, amount.
+      required: true
+      selector:
+        object:
+    reaction:
+      name: Reaction
+      description: Optional meal reaction.
+      required: false
+      selector:
+        select:
+          options:
+            - LOVED
+            - MEH
+            - HATED
+            - ALLERGIC
+    notes:
+      name: Notes
+      description: Optional notes.
+      required: false
+      selector:
+        text:
+    food_note_image:
+      name: Food Note Image
+      description: Optional image identifier.
+      required: false
+      selector:
+        text:
+    start_time:
+      name: Start Time
+      description: Optional event timestamp (ISO-8601). Defaults to now.
+      required: false
+      selector:
+        text:
+
+create_solids_custom_food:
+  name: Create solids custom food
+  description: Create a reusable custom food for solids logging.
+  fields:
+    child_uid:
+      name: Child UID
+      description: Optional when one child is configured; required for multi-child setups.
+      required: false
+      selector:
+        text:
+    child_name:
+      name: Child Name
+      description: Optional configured child name; use this instead of child_uid.
+      required: false
+      selector:
+        text:
+    name:
+      name: Name
+      description: Custom food display name.
+      required: true
+      selector:
+        text:
+    image:
+      name: Image
+      description: Optional image reference.
+      required: false
+      selector:
+        text:
+
+list_solids_curated_foods:
+  name: List solids curated foods
+  description: Return curated foods available to the account.
+  fields:
+    child_uid:
+      name: Child UID
+      description: Optional child target used to resolve account context.
+      required: false
+      selector:
+        text:
+    child_name:
+      name: Child Name
+      description: Optional configured child name.
+      required: false
+      selector:
+        text:
+
+list_solids_custom_foods:
+  name: List solids custom foods
+  description: Return custom foods for the selected child.
+  fields:
+    child_uid:
+      name: Child UID
+      description: Optional when one child is configured; required for multi-child setups.
+      required: false
+      selector:
+        text:
+    child_name:
+      name: Child Name
+      description: Optional configured child name; use this instead of child_uid.
+      required: false
+      selector:
+        text:
+    include_archived:
+      name: Include Archived
+      description: Include archived custom foods in results.
+      required: false
+      selector:
+        boolean:
