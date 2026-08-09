@@ -2,28 +2,53 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import UTC, datetime, timedelta
-from typing import Any
+from typing import Any, Protocol, TypeVar, cast
 from uuid import uuid4
 
 from homeassistant.core import HomeAssistant
 
-try:
-    from homeassistant.helpers.storage import Store
-except ModuleNotFoundError:  # pragma: no cover - test stub compatibility
-    class Store[StoredDataT]:
-        """Fallback in-memory Store for unit tests without Home Assistant."""
-
-        def __init__(self, hass: HomeAssistant, version: int, key: str) -> None:
-            del hass, version, key
-            self._data: StoredDataT | None = None
-
-        async def async_load(self) -> StoredDataT | None:
-            return self._data
-
-        async def async_save(self, data: StoredDataT) -> None:
-            self._data = data
-
 from .const import DOMAIN
+
+StoredDataT = TypeVar("StoredDataT")
+
+
+class _StoreProtocol(Protocol[StoredDataT]):
+    async def async_load(self) -> StoredDataT | None: ...
+
+    async def async_save(self, data: StoredDataT) -> None: ...
+
+
+try:
+    from homeassistant.helpers.storage import Store as _HomeAssistantStore
+except ModuleNotFoundError:  # pragma: no cover - test stub compatibility
+    _HomeAssistantStore = None
+
+
+class _FallbackStore[StoredDataT]:
+    """Fallback in-memory Store for unit tests without Home Assistant."""
+
+    def __init__(self, hass: HomeAssistant, version: int, key: str) -> None:
+        del hass, version, key
+        self._data: StoredDataT | None = None
+
+    async def async_load(self) -> StoredDataT | None:
+        return self._data
+
+    async def async_save(self, data: StoredDataT) -> None:
+        self._data = data
+
+
+def _make_store(
+    hass: HomeAssistant,
+    version: int,
+    key: str,
+) -> _StoreProtocol[dict[str, Any]]:
+    if _HomeAssistantStore is None:
+        return _FallbackStore(hass, version, key)
+    return cast(
+        _StoreProtocol[dict[str, Any]],
+        _HomeAssistantStore(hass, version, key),
+    )
 
 
 class HuckleberryStorage:
@@ -32,7 +57,7 @@ class HuckleberryStorage:
     _VERSION = 1
 
     def __init__(self, hass: HomeAssistant, entry_id: str) -> None:
-        self._store: Store[dict[str, Any]] = Store(
+        self._store: _StoreProtocol[dict[str, Any]] = _make_store(
             hass,
             self._VERSION,
             f"{DOMAIN}_{entry_id}_history",
@@ -55,7 +80,7 @@ class HuckleberryDeleteLogStorage:
     _RETENTION_DAYS = 30
 
     def __init__(self, hass: HomeAssistant, entry_id: str) -> None:
-        self._store: Store[dict[str, Any]] = Store(
+        self._store: _StoreProtocol[dict[str, Any]] = _make_store(
             hass,
             self._VERSION,
             f"{DOMAIN}_{entry_id}_deleted_intervals",
